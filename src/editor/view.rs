@@ -20,6 +20,8 @@ pub struct EditorView {
     focus_handle: FocusHandle,
     content: String,
     selected_range: Range<usize>,
+    selection_anchor: usize,
+    cursor_offset: usize,
     marked_range: Option<Range<usize>>,
     last_layout: Option<WrappedLayout>,
     last_content_bounds: Option<Bounds<Pixels>>,
@@ -42,6 +44,8 @@ impl EditorView {
             focus_handle: cx.focus_handle(),
             content: String::new(),
             selected_range: 0..0,
+            selection_anchor: 0,
+            cursor_offset: 0,
             marked_range: None,
             last_layout: None,
             last_content_bounds: None,
@@ -157,7 +161,7 @@ impl EditorView {
 
     fn select_up(&mut self, _: &SelectUp, _window: &mut Window, cx: &mut Context<Self>) {
         if let Some(layout) = &self.last_layout.clone() {
-            let cursor = self.selected_range.end;
+            let cursor = self.cursor_offset;
             if let Some((line_idx, _)) = self.line_for_offset(cursor) {
                 if line_idx > 0 {
                     let col = cursor - layout.line_ranges[line_idx].start;
@@ -174,7 +178,7 @@ impl EditorView {
 
     fn select_down(&mut self, _: &SelectDown, _window: &mut Window, cx: &mut Context<Self>) {
         if let Some(layout) = &self.last_layout.clone() {
-            let cursor = self.selected_range.end;
+            let cursor = self.cursor_offset;
             if let Some((line_idx, _)) = self.line_for_offset(cursor) {
                 if line_idx + 1 < layout.line_ranges.len() {
                     let col = cursor - layout.line_ranges[line_idx].start;
@@ -190,10 +194,10 @@ impl EditorView {
     }
 
     fn select_to(&mut self, offset: usize, cx: &mut Context<Self>) {
-        self.selected_range = self.selected_range.start..offset;
-        if self.selected_range.end < self.selected_range.start {
-            self.selected_range = self.selected_range.end..self.selected_range.start;
-        }
+        let start = self.selection_anchor.min(offset);
+        let end = self.selection_anchor.max(offset);
+        self.selected_range = start..end;
+        self.cursor_offset = offset;
         cx.notify();
     }
 
@@ -227,6 +231,8 @@ impl EditorView {
 
     fn select_all(&mut self, _: &SelectAll, _window: &mut Window, cx: &mut Context<Self>) {
         self.selected_range = 0..self.content.len();
+        self.selection_anchor = 0;
+        self.cursor_offset = self.content.len();
         cx.notify();
     }
 
@@ -255,6 +261,8 @@ impl EditorView {
 
     fn move_to(&mut self, offset: usize, cx: &mut Context<Self>) {
         self.selected_range = offset..offset;
+        self.selection_anchor = offset;
+        self.cursor_offset = offset;
         self.pending_scroll_to_cursor = true;
         cx.notify();
     }
@@ -296,6 +304,8 @@ impl EditorView {
         );
         let new_cursor = range.start + new_text.len();
         self.selected_range = new_cursor..new_cursor;
+        self.selection_anchor = new_cursor;
+        self.cursor_offset = new_cursor;
         self.marked_range = None;
         self.modified = true;
         self.pending_scroll_to_cursor = true;
@@ -389,6 +399,8 @@ impl EntityInputHandler for EditorView {
 
         let new_cursor = range.start + new_text.len();
         self.selected_range = new_cursor..new_cursor;
+        self.selection_anchor = new_cursor;
+        self.cursor_offset = new_cursor;
         self.modified = true;
         cx.notify();
         cx.emit(EditorEvent::Modified);
@@ -425,6 +437,8 @@ impl EntityInputHandler for EditorView {
                 let pos = range.start + new_text.len();
                 pos..pos
             });
+        self.selection_anchor = self.selected_range.end;
+        self.cursor_offset = self.selected_range.end;
 
         self.modified = true;
         cx.notify();
