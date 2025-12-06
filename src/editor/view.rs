@@ -95,32 +95,6 @@ impl EditorView {
         cx.notify();
     }
 
-    fn compute_paragraph_ranges(content: &str) -> Vec<Range<usize>> {
-        let mut ranges = Vec::new();
-        let mut start = 0;
-        let mut prev_was_newline = false;
-
-        for (i, c) in content.char_indices() {
-            if c == '\n' {
-                if prev_was_newline {
-                    if start < i {
-                        ranges.push(start..i);
-                    }
-                    start = i + 1;
-                }
-                prev_was_newline = true;
-            } else {
-                prev_was_newline = false;
-            }
-        }
-
-        if start <= content.len() {
-            ranges.push(start..content.len());
-        }
-
-        ranges
-    }
-
     fn left(&mut self, _: &Left, _window: &mut Window, cx: &mut Context<Self>) {
         if self.selected_range.is_empty() {
             self.move_to(self.previous_boundary(self.selected_range.start), cx);
@@ -506,11 +480,7 @@ impl Render for EditorView {
         let is_focused = self.focus_handle.is_focused(window);
         let entity = cx.entity().clone();
 
-        let paragraph_ranges = Self::compute_paragraph_ranges(&content);
         let cursor_pos = self.selected_range.start;
-        let current_paragraph = paragraph_ranges
-            .iter()
-            .position(|r| cursor_pos >= r.start && cursor_pos <= r.end);
 
         let placeholder_visible = content.is_empty();
         let focus_mode = self.focus_mode;
@@ -548,8 +518,7 @@ impl Render for EditorView {
                     selected_range,
                     is_focused,
                     placeholder_visible,
-                    paragraph_ranges,
-                    current_paragraph,
+                    cursor_pos,
                     focus_mode,
                     scroll_y,
                     pending_scroll_to_cursor,
@@ -565,8 +534,7 @@ struct EditorElement {
     selected_range: Range<usize>,
     is_focused: bool,
     placeholder_visible: bool,
-    paragraph_ranges: Vec<Range<usize>>,
-    current_paragraph: Option<usize>,
+    cursor_pos: usize,
     focus_mode: bool,
     scroll_y: Pixels,
     pending_scroll_to_cursor: bool,
@@ -653,41 +621,15 @@ impl Element for EditorElement {
             visual_lines.push(line);
             visual_ranges.push(0..0);
         } else {
+            // First pass: compute visual line ranges without shaping
+            let mut temp_ranges: Vec<Range<usize>> = Vec::new();
             let mut logical_start = 0usize;
             for logical_line in self.content.split('\n') {
                 let logical_len = logical_line.len();
                 let logical_end = logical_start + logical_len;
 
-                let color = if self.focus_mode {
-                    let in_current_para = self.current_paragraph.map_or(false, |p_idx| {
-                        if let Some(para_range) = self.paragraph_ranges.get(p_idx) {
-                            logical_start < para_range.end && logical_end >= para_range.start
-                        } else {
-                            false
-                        }
-                    });
-                    if in_current_para {
-                        self.theme.foreground
-                    } else {
-                        self.theme.muted
-                    }
-                } else {
-                    self.theme.foreground
-                };
-
                 if logical_line.is_empty() {
-                    let text: SharedString = "".into();
-                    let run = TextRun {
-                        len: 0,
-                        font: font.clone(),
-                        color,
-                        background_color: None,
-                        underline: None,
-                        strikethrough: None,
-                    };
-                    let line = window.text_system().shape_line(text, font_size, &[run], None);
-                    visual_lines.push(line);
-                    visual_ranges.push(logical_start..logical_start);
+                    temp_ranges.push(logical_start..logical_start);
                 } else {
                     let mut start = 0usize;
                     while start < logical_len {
@@ -705,7 +647,7 @@ impl Element for EditorElement {
                             let run = TextRun {
                                 len: text.len(),
                                 font: font.clone(),
-                                color,
+                                color: self.theme.foreground,
                                 background_color: None,
                                 underline: None,
                                 strikethrough: None,
@@ -722,6 +664,92 @@ impl Element for EditorElement {
                             break;
                         }
 
+                        temp_ranges.push((logical_start + start)..(logical_start + break_at));
+
+                        start = break_at;
+                        while start < logical_len && logical_line.as_bytes().get(start) == Some(&b' ') {
+                            start += 1;
+                        }
+                    }
+                }
+
+                logical_start = logical_end + 1;
+            }
+
+            // Determine which visual line the cursor is on
+            let current_visual_line = temp_ranges
+                .iter()
+                .position(|r| self.cursor_pos >= r.start && self.cursor_pos <= r.end);
+
+            // Second pass: shape lines with correct colors
+            logical_start = 0usize;
+            let mut visual_line_idx = 0usize;
+            for logical_line in self.content.split('\n') {
+                let logical_len = logical_line.len();
+                let logical_end = logical_start + logical_len;
+
+                if logical_line.is_empty() {
+                    let is_current = current_visual_line == Some(visual_line_idx);
+                    let color = if self.focus_mode && !is_current {
+                        self.theme.muted
+                    } else {
+                        self.theme.foreground
+                    };
+
+                    let text: SharedString = "".into();
+                    let run = TextRun {
+                        len: 0,
+                        font: font.clone(),
+                        color,
+                        background_color: None,
+                        underline: None,
+                        strikethrough: None,
+                    };
+                    let line = window.text_system().shape_line(text, font_size, &[run], None);
+                    visual_lines.push(line);
+                    visual_ranges.push(logical_start..logical_start);
+                    visual_line_idx += 1;
+                } else {
+                    let mut start = 0usize;
+                    while start < logical_len {
+                        let mut end = logical_len;
+                        let mut last_break = start;
+
+                        for (i, c) in logical_line[start..].char_indices() {
+                            let pos = start + i + c.len_utf8();
+                            if c.is_whitespace() || c == '-' {
+                                last_break = pos;
+                            }
+
+                            let slice = &logical_line[start..pos];
+                            let text: SharedString = slice.to_string().into();
+                            let run = TextRun {
+                                len: text.len(),
+                                font: font.clone(),
+                                color: self.theme.foreground,
+                                background_color: None,
+                                underline: None,
+                                strikethrough: None,
+                            };
+                            let shaped = window.text_system().shape_line(text, font_size, &[run], None);
+                            if shaped.width > available_width && pos > start + 1 {
+                                end = if last_break > start { last_break } else { pos - c.len_utf8() };
+                                break;
+                            }
+                        }
+
+                        let break_at = end.min(logical_len);
+                        if break_at == start {
+                            break;
+                        }
+
+                        let is_current = current_visual_line == Some(visual_line_idx);
+                        let color = if self.focus_mode && !is_current {
+                            self.theme.muted
+                        } else {
+                            self.theme.foreground
+                        };
+
                         let slice = &logical_line[start..break_at];
                         let text: SharedString = slice.to_string().into();
                         let run = TextRun {
@@ -736,6 +764,7 @@ impl Element for EditorElement {
                         visual_lines.push(shaped);
                         visual_ranges.push((logical_start + start)..(logical_start + break_at));
 
+                        visual_line_idx += 1;
                         start = break_at;
                         while start < logical_len && logical_line.as_bytes().get(start) == Some(&b' ') {
                             start += 1;
