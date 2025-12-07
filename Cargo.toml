@@ -1,9 +1,21 @@
 [package]
-name = "jid"
+name = "jotitdown"
 version = "0.1.0"
 edition = "2024"
+rust-version = "1.85"
+authors = ["Eric Hamiter <eric@erichamiter.com>"]
 description = "A distraction-free writing app"
 license = "MIT"
+repository = "https://github.com/ehamiter/jid"
+homepage = "https://github.com/ehamiter/jid"
+readme = "README.md"
+keywords = ["editor", "writing", "distraction-free", "gpui"]
+categories = ["text-editors"]
+exclude = ["screenshots/*", "assets/*"]
+
+[[bin]]
+name = "jid"
+path = "src/main.rs"
 
 [dependencies]
 gpui = { version = "*" }
