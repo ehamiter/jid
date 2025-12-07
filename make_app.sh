@@ -35,6 +35,10 @@ mkdir -p "${RESOURCES_DIR}"
 
 cp "$JID_BIN" "${MACOS_DIR}/${APP_NAME}"
 
+# Download app icon
+echo "Downloading app icon..."
+curl -sSL "https://raw.githubusercontent.com/ehamiter/jid/main/assets/icons/AppIcon.icns" -o "${RESOURCES_DIR}/AppIcon.icns"
+
 cat > "${CONTENTS_DIR}/Info.plist" << EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
