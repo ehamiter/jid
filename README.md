@@ -13,6 +13,16 @@ A distraction-free writing app built with [GPUI](https://www.gpui.rs/).
 
 ## Installation
 
+### Linux
+
+Install required dependencies first:
+
+```
+sudo apt install libxkbcommon-x11-dev libxkbcommon-dev
+```
+
+### All platforms
+
 ```
 cargo install jotitdown
 ```
