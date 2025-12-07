@@ -11,23 +11,34 @@ A distraction-free writing app built with [GPUI](https://www.gpui.rs/).
 - **Focus mode** — Dims all lines except the current one for distraction-free writing
 - **Keyboard-first** — All actions via shortcuts
 
-## Usage
+## Installation
+
+```
+cargo install jotitdown
+```
+
+Then run with:
+
+```
+jid
+```
+
+To create a macOS app bundle (launchable from Spotlight/Finder):
+
+```
+curl -sSL https://raw.githubusercontent.com/ehamiter/jid/main/make_app.sh | bash
+```
+
+## Building from Source
 
 ```
 cargo run
 ```
 
-## Building the App
-
 To build a macOS app bundle:
 
 ```
 ./build_app.sh
-```
-
-To install to Applications:
-
-```
 cp -r target/release/jid.app /Applications/
 ```
 
