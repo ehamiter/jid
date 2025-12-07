@@ -48,7 +48,7 @@ cp -r target/release/jid.app /Applications/
 |--------|----------|
 | Save | `Cmd+S` |
 | Cycle theme | `Cmd+Shift+T` |
-| Toggle focus mode | `Cmd+.` |
+| Toggle focus mode | `Cmd+Shift+F` |
 | Open config | `Cmd+,` |
 | Quit | `Cmd+Q` |
 
@@ -68,7 +68,7 @@ Cycle through themes with `Cmd+Shift+T` in this order: Dark → Light → Sepia 
 |:------:|:--------:|
 | ![Forest](screenshots/theme-forest.png) | ![Midnight](screenshots/theme-midnight.png) |
 
-**Midnight** is a privacy-focused theme with very dim text, designed for use in public spaces where you want to minimize screen visibility from a distance. When combined with focus mode (`Cmd+.`), non-current lines are also ROT13 obfuscated—making your text unreadable to anyone glancing at your screen.
+**Midnight** is a privacy-focused theme with very dim text, designed for use in public spaces where you want to minimize screen visibility from a distance. When combined with focus mode (`Cmd+Shift+F`), non-current lines are also ROT13 obfuscated—making your text unreadable to anyone glancing at your screen.
 
 ## Configuration
 

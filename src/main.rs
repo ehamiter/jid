@@ -29,7 +29,7 @@ fn main() {
             KeyBinding::new("cmd-v", Paste, Some("Editor")),
             KeyBinding::new("cmd-s", Save, Some("jid")),
             KeyBinding::new("cmd-shift-t", ToggleTheme, Some("jid")),
-            KeyBinding::new("cmd-.", ToggleFocusMode, Some("Editor")),
+            KeyBinding::new("cmd-shift-f", ToggleFocusMode, Some("Editor")),
             KeyBinding::new("cmd-,", OpenConfig, Some("jid")),
             KeyBinding::new("cmd-q", Quit, None),
         ]);
