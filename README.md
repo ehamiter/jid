@@ -43,20 +43,28 @@ cp -r target/release/jid.app /Applications/
 
 ## Themes
 
+Cycle through themes with `Cmd+Shift+T` in this order: Dark → Light → Sepia → Ocean → Forest → Midnight
+
 | Dark | Light |
 |:----:|:-----:|
 | ![Dark](screenshots/theme-dark.png) | ![Light](screenshots/theme-light.png) |
 
-| Sepia | Ocean | Forest |
-|:-----:|:-----:|:------:|
-| ![Sepia](screenshots/theme-sepia.png) | ![Ocean](screenshots/theme-ocean.png) | ![Forest](screenshots/theme-forest.png) |
+| Sepia | Ocean |
+|:-----:|:-----:|
+| ![Sepia](screenshots/theme-sepia.png) | ![Ocean](screenshots/theme-ocean.png) |
+
+| Forest | Midnight |
+|:------:|:--------:|
+| ![Forest](screenshots/theme-forest.png) | ![Midnight](screenshots/theme-midnight.png) |
+
+**Midnight** is a privacy-focused theme with very dim text, designed for use in public spaces where you want to minimize screen visibility from a distance.
 
 ## Configuration
 
 Settings are stored in `~/.config/jid/jid.toml` and automatically update when you change themes or toggle focus mode.
 
 ```toml
-theme = "dark"                              # dark, light, sepia, ocean, or forest
+theme = "dark"                              # dark, light, sepia, ocean, forest, or midnight
 focus_mode = false                          # Dims text except current line
 documents_dir = "/Users/you/Documents/jid"  # Where documents are saved
 ```

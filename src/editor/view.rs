@@ -704,8 +704,12 @@ impl Element for EditorElement {
 
                 if logical_line.is_empty() {
                     let is_current = current_visual_line == Some(visual_line_idx);
-                    let color = if self.focus_mode && !is_current {
-                        self.theme.muted
+                    let color = if self.focus_mode {
+                        if is_current {
+                            self.theme.focus_current
+                        } else {
+                            self.theme.focus_dimmed
+                        }
                     } else {
                         self.theme.foreground
                     };
@@ -758,8 +762,12 @@ impl Element for EditorElement {
                         }
 
                         let is_current = current_visual_line == Some(visual_line_idx);
-                        let color = if self.focus_mode && !is_current {
-                            self.theme.muted
+                        let color = if self.focus_mode {
+                            if is_current {
+                                self.theme.focus_current
+                            } else {
+                                self.theme.focus_dimmed
+                            }
                         } else {
                             self.theme.foreground
                         };

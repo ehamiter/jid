@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "lowercase")]
 pub enum ThemeMode {
     Dark,
+    Midnight,
     Sepia,
     Ocean,
     Forest,
@@ -14,11 +15,12 @@ pub enum ThemeMode {
 impl ThemeMode {
     pub fn next(&self) -> Self {
         match self {
-            ThemeMode::Dark => ThemeMode::Sepia,
+            ThemeMode::Dark => ThemeMode::Light,
+            ThemeMode::Light => ThemeMode::Sepia,
             ThemeMode::Sepia => ThemeMode::Ocean,
             ThemeMode::Ocean => ThemeMode::Forest,
-            ThemeMode::Forest => ThemeMode::Light,
-            ThemeMode::Light => ThemeMode::Dark,
+            ThemeMode::Forest => ThemeMode::Midnight,
+            ThemeMode::Midnight => ThemeMode::Dark,
         }
     }
 }
@@ -30,6 +32,8 @@ pub struct Theme {
     pub foreground: Hsla,
     pub muted: Hsla,
     pub selection: Hsla,
+    pub focus_current: Hsla,
+    pub focus_dimmed: Hsla,
 }
 
 impl Theme {
@@ -40,6 +44,20 @@ impl Theme {
             foreground: hsla(0.17, 0.06, 0.82, 1.0),
             muted: hsla(0.17, 0.04, 0.45, 1.0),
             selection: hsla(0.58, 0.30, 0.35, 0.40),
+            focus_current: hsla(0.17, 0.06, 0.82, 1.0),
+            focus_dimmed: hsla(0.17, 0.04, 0.45, 1.0),
+        }
+    }
+
+    pub fn midnight() -> Self {
+        Self {
+            mode: ThemeMode::Midnight,
+            background: hsla(0.67, 0.05, 0.06, 1.0),
+            foreground: hsla(0.0, 0.0, 0.30, 1.0),
+            muted: hsla(0.0, 0.0, 0.20, 1.0),
+            selection: hsla(0.67, 0.10, 0.15, 0.50),
+            focus_current: hsla(0.0, 0.0, 0.22, 1.0),
+            focus_dimmed: hsla(0.0, 0.0, 0.15, 1.0),
         }
     }
 
@@ -50,6 +68,8 @@ impl Theme {
             foreground: hsla(0.08, 0.35, 0.25, 1.0),
             muted: hsla(0.08, 0.20, 0.50, 1.0),
             selection: hsla(0.10, 0.35, 0.70, 0.35),
+            focus_current: hsla(0.08, 0.35, 0.25, 1.0),
+            focus_dimmed: hsla(0.08, 0.20, 0.50, 1.0),
         }
     }
 
@@ -60,6 +80,8 @@ impl Theme {
             foreground: hsla(0.52, 0.12, 0.78, 1.0),
             muted: hsla(0.52, 0.10, 0.45, 1.0),
             selection: hsla(0.50, 0.40, 0.40, 0.40),
+            focus_current: hsla(0.52, 0.12, 0.78, 1.0),
+            focus_dimmed: hsla(0.52, 0.10, 0.45, 1.0),
         }
     }
 
@@ -70,6 +92,8 @@ impl Theme {
             foreground: hsla(0.25, 0.08, 0.80, 1.0),
             muted: hsla(0.25, 0.06, 0.45, 1.0),
             selection: hsla(0.35, 0.35, 0.35, 0.40),
+            focus_current: hsla(0.25, 0.08, 0.80, 1.0),
+            focus_dimmed: hsla(0.25, 0.06, 0.45, 1.0),
         }
     }
 
@@ -80,12 +104,15 @@ impl Theme {
             foreground: hsla(0.17, 0.08, 0.25, 1.0),
             muted: hsla(0.17, 0.05, 0.55, 1.0),
             selection: hsla(0.58, 0.30, 0.75, 0.30),
+            focus_current: hsla(0.17, 0.08, 0.25, 1.0),
+            focus_dimmed: hsla(0.17, 0.05, 0.55, 1.0),
         }
     }
 
     pub fn from_mode(mode: ThemeMode) -> Self {
         match mode {
             ThemeMode::Dark => Self::dark(),
+            ThemeMode::Midnight => Self::midnight(),
             ThemeMode::Sepia => Self::sepia(),
             ThemeMode::Ocean => Self::ocean(),
             ThemeMode::Forest => Self::forest(),
