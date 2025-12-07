@@ -3,7 +3,7 @@ use std::ops::Range;
 use unicode_segmentation::*;
 
 use crate::actions::ToggleFocusMode;
-use crate::theme::Theme;
+use crate::theme::{Theme, ThemeMode};
 
 pub enum EditorEvent {
     Modified,
@@ -15,6 +15,16 @@ impl EventEmitter<EditorEvent> for EditorView {}
 const PADDING: f32 = 48.0;
 const LINE_HEIGHT: f32 = 38.0;
 const FONT_SIZE: f32 = 21.0;
+
+fn rot13(s: &str) -> String {
+    s.chars()
+        .map(|c| match c {
+            'a'..='m' | 'A'..='M' => (c as u8 + 13) as char,
+            'n'..='z' | 'N'..='Z' => (c as u8 - 13) as char,
+            _ => c,
+        })
+        .collect()
+}
 
 pub struct EditorView {
     focus_handle: FocusHandle,
@@ -773,7 +783,15 @@ impl Element for EditorElement {
                         };
 
                         let slice = &logical_line[start..break_at];
-                        let text: SharedString = slice.to_string().into();
+                        let display_text = if self.focus_mode
+                            && !is_current
+                            && self.theme.mode == ThemeMode::Midnight
+                        {
+                            rot13(slice)
+                        } else {
+                            slice.to_string()
+                        };
+                        let text: SharedString = display_text.into();
                         let run = TextRun {
                             len: text.len(),
                             font: font.clone(),
